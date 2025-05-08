@@ -7,7 +7,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-func PluginRateLimiter(args SpecArgs) (Func, error) {
+func RateLimiter(args SpecArgs) (Func, error) {
 	rawRPS, ok := args["rps"]
 	if !ok {
 		return nil, errors.New("missing 'rps'")

@@ -9,7 +9,7 @@ import (
 )
 
 // 🚀 Handler — минималистичный шприц, что вшивает внешний мир в твой процесс, избегая копий, но сохраняя смысл.
-func Handler(prefix, target string, cfg ProxyConfig) fasthttp.RequestHandler {
+func Handler(from, to string, cfg ProxyConfig) fasthttp.RequestHandler {
 	builderPool := &sync.Pool{
 		New: func() any {
 			b := strings.Builder{}
@@ -33,8 +33,8 @@ func Handler(prefix, target string, cfg ProxyConfig) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
 		upstreamBuilder := builderPool.Get().(*strings.Builder)
 		upstreamBuilder.Reset()
-		upstreamBuilder.WriteString(target)
-		upstreamBuilder.Write(ctx.Path()[len(prefix):])
+		upstreamBuilder.WriteString(to)
+		upstreamBuilder.Write(ctx.Path()[len(from):])
 		ctx.Request.SetRequestURI(upstreamBuilder.String())
 		builderPool.Put(upstreamBuilder)
 		ctx.Request.SetTimeout(cfg.Timeout)

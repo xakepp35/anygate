@@ -5,7 +5,7 @@ import "github.com/rs/zerolog/log"
 type Registry = map[string]Constructor
 
 var registry = Registry{
-	"limiter": PluginRateLimiter,
+	"rate_limiter": RateLimiter,
 }
 
 // какие опции тут у нас есть?
@@ -15,6 +15,7 @@ var registry = Registry{
 // logger	level, fields, target	написать Логгирование, продумать модель скрытия sensitive data
 // headers	request: [], response: [] - наборы инструкуий вида add, remove, set	 Управление HTTP-заголовками
 
+// 🧙 BuildChain — алхимик исполнения: каждое зелье добавляет эффект.
 func BuildChain(handler Handler, specs ...Spec) Handler {
 	for _, spec := range specs {
 		constructor, ok := registry[spec.Kind]
