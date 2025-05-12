@@ -10,6 +10,7 @@ require (
 	github.com/valyala/fasthttp v1.62.0
 	github.com/xakepp35/pkg v0.0.0-20250507224648-61faeaab3baf
 	golang.org/x/time v0.11.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
