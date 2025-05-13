@@ -1,4 +1,4 @@
-# 🧾 Конфиг anygate.yml, по братски explaied 
+# 🧾 Конфиг anygate.yml, по братски explained 
 
 [Вернуться обратно](README.md)
 
