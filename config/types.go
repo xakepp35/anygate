@@ -17,14 +17,13 @@ type Root struct {
 
 // 📦 Static — контракт между диском и путём.
 type Static struct {
-	Root               string        `yaml:"root"`                 // Корень сервируемых файлов
+	Root               string        `yaml:"root"`                 // Корень сервируемых файлов,не оверрайдим
 	Compress           bool          `yaml:"compress"`             // Включить сжатие
 	CompressBrotli     bool          `yaml:"compress_brotli"`      // Использовать Brotli (если Compress = true)
 	CompressZstd       bool          `yaml:"compress_zstd"`        // Использовать Zstd (если Compress = true)
 	GenerateIndexPages bool          `yaml:"generate_index_pages"` // Генерировать индексные страницы
 	IndexNames         []string      `yaml:"index_names"`          // Список index-файлов (index.html и т.п.)
 	CacheDuration      time.Duration `yaml:"cache_duration"`       // Время жизни файлового кеша
-	AllowEmptyRoot     bool          `yaml:"allow_empty_root"`     // Разрешить пустой Root
 	AcceptByteRange    bool          `yaml:"accept_byte_range"`    // Поддержка byte-range
 	SkipCache          bool          `yaml:"skip_cache"`           // Не кешировать file handler'ы
 }
