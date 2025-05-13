@@ -2,8 +2,8 @@
 
 # 🧠 Вариативность — наш стиль
 TARGETS=(
-  "echo:9000"
-  "anygate:8000"
+  "echo:80"
+  "anygate:80"
   "haproxy:80"
   "nginx-dark:80"
   "nginx:80"
@@ -19,4 +19,3 @@ for target in "${TARGETS[@]}"; do
   echo -e "\n🎯 TARGET: $target"
   docker compose exec wrk wrk -t"$THREADS" -c"$CONNECTIONS" -d"$DURATION" "http://$target/"
 done
-

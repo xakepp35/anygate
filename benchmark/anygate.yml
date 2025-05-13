@@ -1,4 +1,6 @@
-config:
-  timeout: 5s
 routes:
-  /: http://echo:9000/
+  /: http://echo:80/
+proxy:
+  max_conns_per_host: 1048576
+server:
+  concurrency: 1048576
