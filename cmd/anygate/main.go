@@ -4,10 +4,10 @@ import (
 	"net"
 	"time"
 
-	"github.com/fasthttp/router"
 	"github.com/rs/zerolog/log"
 	"github.com/xakepp35/anygate/config"
 	"github.com/xakepp35/anygate/handler"
+	"github.com/xakepp35/anygate/router"
 	"github.com/xakepp35/pkg/xlog"
 )
 
@@ -20,9 +20,14 @@ func main() {
 	rootConfig := config.NewRoot()
 	log.Debug().Any("root", rootConfig).Msg("config.NewRoot")
 
+	// mainRouter := router.New()
+	// handler.Register(mainRouter, rootConfig)
+	// httpServer := handler.NewServer(rootConfig.Server, mainRouter.Handler)
+
 	mainRouter := router.New()
-	handler.BuildRoutes(mainRouter, rootConfig)
+	handler.Register(mainRouter, rootConfig)
 	httpServer := handler.NewServer(rootConfig.Server, mainRouter.Handler)
+
 	// listen
 	ln, err := net.Listen(rootConfig.Server.ListenNetwork, rootConfig.Server.ListenAddr)
 	if err != nil {

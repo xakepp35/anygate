@@ -3,35 +3,35 @@ package handler
 import (
 	"strings"
 
-	"github.com/fasthttp/router"
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 	"github.com/xakepp35/anygate/config"
 	"github.com/xakepp35/anygate/plugin"
+	"github.com/xakepp35/anygate/router"
 )
 
-// 🏗️ BuildRoutes — чертёж памяти, где каждый путь знает свою судьбу.
-func BuildRoutes(r *router.Router, cfg config.Root, inheritedPlugins ...plugin.Spec) {
+// 🏗️ Register — чертёж памяти, где каждый путь знает свою судьбу.
+func Register(r *router.Router, cfg config.Root, inheritedPlugins ...plugin.Spec) {
 	// Склеиваем middleware цепочку текущий группы
 	fullChain := append([]plugin.Spec{}, inheritedPlugins...)
 	fullChain = append(fullChain, cfg.Plugins...)
 	// Регистрируем маршруты текущей группы
 	for fromSpec, to := range cfg.Routes {
 		methods, from := parseFromSpec(fromSpec)
-		base, kind := NewHandler(from, to, cfg)
+		base, mode := New(from, to, cfg)
 		final := plugin.BuildChain(base, fullChain...)
 		for _, method := range methods {
 			registerRoute(r, method, from, final)
-			log.Info().Str("from", from).Str("method", method).Str("to", to).Msg(kind)
+			log.Info().Str("from", from).Str("method", method).Str("to", to).Str("mode", mode).Msg("route")
 		}
 	}
 	// Рекурсивно обрабатываем подгруппы
 	for _, child := range cfg.Groups {
-		BuildRoutes(r, child, fullChain...)
+		Register(r, child, fullChain...)
 	}
 }
 
-func NewHandler(from, to string, cfg config.Root) (fasthttp.RequestHandler, string) {
+func New(from, to string, cfg config.Root) (fasthttp.RequestHandler, string) {
 	switch {
 	case to == "":
 		return Ok, "ok"
@@ -73,28 +73,32 @@ func parseFromSpec(spec string) ([]string, string) {
 // }
 
 func registerRoute(r *router.Router, method, path string, h fasthttp.RequestHandler) {
-	switch method {
-	case "ANY":
-		r.ANY(path, h)
-	case "GET":
-		r.GET(path, h)
-	case "HEAD":
-		r.HEAD(path, h)
-	case "POST":
-		r.POST(path, h)
-	case "PUT":
-		r.PUT(path, h)
-	case "PATCH":
-		r.PATCH(path, h)
-	case "DELETE":
-		r.DELETE(path, h)
-	case "CONNECT":
-		r.CONNECT(path, h)
-	case "OPTIONS":
-		r.OPTIONS(path, h)
-	case "TRACE":
-		r.TRACE(path, h)
-	default:
-		log.Fatal().Str("method", method).Str("path", path).Msg("unsupported method")
-	}
+	r.Register(method, path, h)
 }
+
+// func registerRoute(r *router.Router, method, path string, h fasthttp.RequestHandler) {
+// 	switch method {
+// 	case "ANY":
+// 		r.ANY(path, h)
+// 	case "GET":
+// 		r.GET(path, h)
+// 	case "HEAD":
+// 		r.HEAD(path, h)
+// 	case "POST":
+// 		r.POST(path, h)
+// 	case "PUT":
+// 		r.PUT(path, h)
+// 	case "PATCH":
+// 		r.PATCH(path, h)
+// 	case "DELETE":
+// 		r.DELETE(path, h)
+// 	case "CONNECT":
+// 		r.CONNECT(path, h)
+// 	case "OPTIONS":
+// 		r.OPTIONS(path, h)
+// 	case "TRACE":
+// 		r.TRACE(path, h)
+// 	default:
+// 		log.Fatal().Str("method", method).Str("path", path).Msg("unsupported method")
+// 	}
+// }

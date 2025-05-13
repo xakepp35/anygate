@@ -1,6 +1,8 @@
 routes:
   /: http://echo:80/
+  /b/: ./benchmark/
 proxy:
   max_conns_per_host: 1048576
 server:
+  listen_addr: ":8081"
   concurrency: 1048576
