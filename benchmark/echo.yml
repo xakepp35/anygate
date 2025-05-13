@@ -1,0 +1,4 @@
+routes:
+  /: "*"
+server:
+  concurrency: 4096

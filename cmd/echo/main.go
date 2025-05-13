@@ -5,18 +5,14 @@ import (
 	"log"
 
 	"github.com/valyala/fasthttp"
+	"github.com/xakepp35/anygate/handler"
 )
 
 func main() {
 	addr := ":9000"
 	log.Println("✅ fasthttp echo up at", addr)
-	err := fasthttp.ListenAndServe(addr, handlerOK)
+	err := fasthttp.ListenAndServe(addr, handler.Ok)
 	if err != nil {
 		log.Fatalln("🔥 fasthttp echo crash:", err)
 	}
-}
-
-func handlerOK(ctx *fasthttp.RequestCtx) {
-	// log.Println("request")
-	ctx.SetStatusCode(fasthttp.StatusOK)
 }

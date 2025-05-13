@@ -1,15 +1,25 @@
-package proxy
+package handler
 
 import (
-	"crypto/tls"
 	"strings"
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
+	"github.com/xakepp35/anygate/config"
 )
 
-// 🚀 Handler — минималистичный шприц, что вшивает внешний мир в твой процесс, избегая копий, но сохраняя смысл.
-func Handler(from, to string, cfg ProxyConfig) fasthttp.RequestHandler {
+// 🚀 NewProxy — минималистичный шприц, что вшивает внешний мир в твой процесс, избегая копий, но сохраняя смысл.
+func NewProxy(from, to string, cfg config.Proxy) fasthttp.RequestHandler {
+	if cfg.StatusBadGateway == 0 {
+		cfg.StatusBadGateway = fasthttp.StatusBadGateway
+	}
+	if cfg.StatusGatewayTimeout == 0 {
+		cfg.StatusGatewayTimeout = fasthttp.StatusGatewayTimeout
+	}
+	if cfg.RouteLenHint == 0 {
+		cfg.RouteLenHint = 64
+	}
 	builderPool := &sync.Pool{
 		New: func() any {
 			b := strings.Builder{}
@@ -17,18 +27,7 @@ func Handler(from, to string, cfg ProxyConfig) fasthttp.RequestHandler {
 			return &b
 		},
 	}
-	client := fasthttp.Client{}
-	if cfg.InsecureSkipVerify {
-		client.TLSConfig = &tls.Config{
-			InsecureSkipVerify: true,
-		}
-	}
-	if cfg.StatusBadGateway == 0 {
-		cfg.StatusBadGateway = fasthttp.StatusBadGateway
-	}
-	if cfg.StatusGatewayTimeout == 0 {
-		cfg.StatusGatewayTimeout = fasthttp.StatusGatewayTimeout
-	}
+	client := NewClient(cfg)
 	// closure workload - caution, hot path!
 	return func(ctx *fasthttp.RequestCtx) {
 		upstreamBuilder := builderPool.Get().(*strings.Builder)
@@ -45,9 +44,11 @@ func Handler(from, to string, cfg ProxyConfig) fasthttp.RequestHandler {
 		case fasthttp.ErrTimeout:
 			ctx.SetStatusCode(cfg.StatusGatewayTimeout)
 			ctx.SetBodyString(`{"error":"timeout"}`)
+			log.Error().Err(err).Str("to", to).Str("from", from).Msg("timeout")
 		default:
 			ctx.SetStatusCode(cfg.StatusBadGateway)
 			ctx.SetBodyString(`{"error":"` + err.Error() + `"}`)
+			log.Error().Err(err).Str("to", to).Str("from", from).Msg("gateway")
 		}
 	}
 }
