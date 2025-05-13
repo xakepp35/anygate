@@ -6,10 +6,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # build binary
-COPY cmd cmd
-COPY config config
-COPY handler handler
-COPY plugin plugin
+COPY . .
 RUN CGO_ENABLED=0 go build -o anygate ./cmd/anygate/main.go
 
 FROM scratch
