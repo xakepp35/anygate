@@ -40,5 +40,11 @@ func NewStatic(from, rootPath string, cfg config.Static) fasthttp.RequestHandler
 			return pathRootFallback
 		},
 	}
-	return fs.NewRequestHandler()
+	h := fs.NewRequestHandler()
+	fs.PathNotFound = func(ctx *fasthttp.RequestCtx) {
+		// fallback для SPA на корень "/" — IndexNames сработают автоматически
+		ctx.Request.SetRequestURI("/")
+		h(ctx)
+	}
+	return h
 }
