@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"bytes"
+
 	"github.com/valyala/fasthttp"
 	"github.com/xakepp35/anygate/config"
 )
@@ -40,5 +42,16 @@ func NewStatic(from, rootPath string, cfg config.Static) fasthttp.RequestHandler
 			return pathRootFallback
 		},
 	}
-	return fs.NewRequestHandler()
+	h := fs.NewRequestHandler()
+	fs.PathNotFound = func(ctx *fasthttp.RequestCtx) {
+		if bytes.Equal(ctx.URI().Path(), pathRootFallback) {
+			// Защита от бесконечного цикла
+			ctx.SetStatusCode(fasthttp.StatusNotFound)
+			return
+		}
+		// fallback для SPA на корень "/" — IndexNames сработают автоматически
+		ctx.Request.SetRequestURIBytes(pathRootFallback)
+		h(ctx)
+	}
+	return h
 }
