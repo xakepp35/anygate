@@ -1,12 +1,10 @@
 package handler
 
 import (
-	"strings"
-	"sync"
-
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 	"github.com/xakepp35/anygate/config"
+	"github.com/xakepp35/anygate/utils"
 )
 
 // 🚀 NewProxy — минималистичный шприц, что вшивает внешний мир в твой процесс, избегая копий, но сохраняя смысл.
@@ -20,22 +18,11 @@ func NewProxy(from, to string, cfg config.Proxy) fasthttp.RequestHandler {
 	if cfg.RouteLenHint == 0 {
 		cfg.RouteLenHint = 64
 	}
-	builderPool := &sync.Pool{
-		New: func() any {
-			b := strings.Builder{}
-			b.Grow(cfg.RouteLenHint)
-			return &b
-		},
-	}
+	pathBuilder := utils.NewPathBuilder(to, len(from), cfg.RouteLenHint)
 	client := NewClient(cfg)
 	// closure workload - caution, hot path!
 	return func(ctx *fasthttp.RequestCtx) {
-		upstreamBuilder := builderPool.Get().(*strings.Builder)
-		upstreamBuilder.Reset()
-		upstreamBuilder.WriteString(to)
-		upstreamBuilder.Write(ctx.Path()[len(from):])
-		ctx.Request.SetRequestURI(upstreamBuilder.String())
-		builderPool.Put(upstreamBuilder)
+		ctx.Request.SetRequestURI(pathBuilder.Build(ctx.Path()))
 		ctx.Request.SetTimeout(cfg.Timeout)
 		err := client.Do(&ctx.Request, &ctx.Response)
 		switch err {

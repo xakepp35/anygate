@@ -13,7 +13,8 @@ import (
 // 🏗️ Register — чертёж памяти, где каждый путь знает свою судьбу.
 func Register(r *router.Router, cfg config.Root, inheritedPlugins ...plugin.Spec) {
 	// Склеиваем middleware цепочку текущий группы
-	fullChain := append([]plugin.Spec{}, inheritedPlugins...)
+	fullChain := make([]plugin.Spec, 0, len(inheritedPlugins)+len(cfg.Plugins))
+	fullChain = append(fullChain, inheritedPlugins...)
 	fullChain = append(fullChain, cfg.Plugins...)
 	// Регистрируем маршруты текущей группы
 	for fromSpec, to := range cfg.Routes {

@@ -42,7 +42,6 @@ func NewStatic(from, rootPath string, cfg config.Static) fasthttp.RequestHandler
 			return pathRootFallback
 		},
 	}
-	h := fs.NewRequestHandler()
 	fs.PathNotFound = func(ctx *fasthttp.RequestCtx) {
 		if bytes.Equal(ctx.URI().Path(), pathRootFallback) {
 			// Защита от бесконечного цикла
@@ -51,7 +50,7 @@ func NewStatic(from, rootPath string, cfg config.Static) fasthttp.RequestHandler
 		}
 		// fallback для SPA на корень "/" — IndexNames сработают автоматически
 		ctx.Request.SetRequestURIBytes(pathRootFallback)
-		h(ctx)
+		fs.NewRequestHandler()(ctx)
 	}
-	return h
+	return fs.NewRequestHandler()
 }
