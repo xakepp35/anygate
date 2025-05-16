@@ -52,6 +52,7 @@ func insert(n *node, path string, method string, handler fasthttp.RequestHandler
 				prefix:   n.prefix[common:],
 				handlers: n.handlers,
 				children: n.children,
+				wild:     n.wild,
 			}
 			n.prefix = path[:common]
 			n.handlers = nil
@@ -62,31 +63,39 @@ func insert(n *node, path string, method string, handler fasthttp.RequestHandler
 			if n.handlers == nil {
 				n.handlers = make(map[string]fasthttp.RequestHandler, 1)
 			}
+
 			if method == "" {
 				n.wild = handler
-				return
+			} else {
+				n.handlers[method] = handler
 			}
-			n.handlers[method] = handler
 			return
 		}
 
+		var found *node
 		for _, child := range n.children {
 			if strings.HasPrefix(path, child.prefix) {
-				n = child
-				continue
+				found = child
+				break
 			}
 		}
+
+		if found != nil {
+			n = found
+			continue
+		}
+
 		newChild := &node{
 			prefix:   path,
 			handlers: map[string]fasthttp.RequestHandler{},
 		}
-		n.children = append(n.children, newChild)
+
 		if method != "" {
 			newChild.handlers[method] = handler
-			return
+		} else {
+			newChild.wild = handler
 		}
-		newChild.wild = handler
-
+		n.children = append(n.children, newChild)
 		return
 	}
 }
@@ -102,12 +111,20 @@ func lookup(n *node, path string, method string) fasthttp.RequestHandler {
 				}
 				return n.wild
 			}
+
+			var found bool
 			for _, child := range n.children {
 				if strings.HasPrefix(path, child.prefix) {
 					n = child
-					continue
+					found = true
+					break
 				}
 			}
+
+			if found {
+				continue
+			}
+
 			if n.handlers != nil {
 				h := n.handlers[method]
 				if h != nil {
@@ -115,6 +132,7 @@ func lookup(n *node, path string, method string) fasthttp.RequestHandler {
 				}
 				return n.wild
 			}
+
 			return nil
 		}
 		return nil
