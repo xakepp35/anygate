@@ -1,0 +1,355 @@
+{
+"$id": "[https://anygate.dev/schema/config](https://anygate.dev/schema/config)",
+"$schema": "[https://json-schema.org/draft/2020-12/schema](https://json-schema.org/draft/2020-12/schema)",
+"title": "AnyGate Config",
+"description": "JSON Schema конфигурации AnyGate (валидирует YAML/JSON представление).",
+"type": "object",
+"additionalProperties": false,
+"properties": {
+"schema_version": {
+"description": "Версия схемы конфигурации.",
+"type": "string"
+},
+"server": {
+"description": "Настройки входного сервера (приёма соединений и HTTP-обработки).",
+"type": "object",
+"additionalProperties": false,
+"properties": {
+"listen_addr": {
+"description": "Адрес/порт прослушивания. Примеры: ":8080", "127.0.0.1:8080", "/run/anygate.sock" для unix-сокета.",
+"type": "string"
+},
+"listen_network": {
+"description": "Тип сети для прослушивания.",
+"type": "string",
+"enum": ["tcp", "unix"]
+},
+"name": {
+"description": "Значение заголовка Server (если не отключено).",
+"type": "string"
+},
+"concurrency": {
+"description": "Максимум одновременных соединений/обработчиков.",
+"type": "integer",
+"minimum": 1
+},
+"read_buffer_size": {
+"description": "Размер буфера чтения (байты).",
+"type": "integer",
+"minimum": 0
+},
+"write_buffer_size": {
+"description": "Размер буфера записи (байты).",
+"type": "integer",
+"minimum": 0
+},
+"read_timeout": { "$ref": "#/$defs/duration" },
+"write_timeout": { "$ref": "#/$defs/duration" },
+"idle_timeout": { "$ref": "#/$defs/duration" },
+"max_conns_per_ip": {
+"description": "Лимит соединений с одного IP.",
+"type": "integer",
+"minimum": 0
+},
+"max_requests_per_conn": {
+"description": "Лимит запросов на одно keep-alive соединение.",
+"type": "integer",
+"minimum": 0
+},
+"max_idle_worker_duration": { "$ref": "#/$defs/duration" },
+"tcp_keepalive_period": { "$ref": "#/$defs/duration" },
+"max_request_body_size": {
+"description": "Максимальный размер тела запроса (байты).",
+"type": "integer",
+"minimum": 0
+},
+"sleep_when_limit_exceeded": { "$ref": "#/$defs/duration" },
+"disable_keepalive": { "type": "boolean" },
+"tcp_keepalive": { "type": "boolean" },
+"reduce_memory_usage": { "type": "boolean" },
+"get_only": { "type": "boolean" },
+"disable_multipart_form": { "type": "boolean" },
+"log_all_errors": { "type": "boolean" },
+"secure_error_log": { "type": "boolean" },
+"disable_header_normalizing": { "type": "boolean" },
+"no_default_server_header": { "type": "boolean" },
+"no_default_date": { "type": "boolean" },
+"no_default_content_type": { "type": "boolean" },
+"keep_hijacked_conns": { "type": "boolean" },
+"close_on_shutdown": { "type": "boolean" },
+"stream_request_body": { "type": "boolean" }
+}
+},
+"tls": {
+"description": "Входящий TLS (сертификаты сервера, ALPN, OCSP).",
+"type": "object",
+"additionalProperties": false,
+"properties": {
+"enabled": { "type": "boolean" },
+"cert_file": { "type": "string", "description": "Путь к PEM-сертификату сервера." },
+"key_file": { "type": "string", "description": "Путь к приватному ключу (PEM)." },
+"client_ca_file": { "type": "string", "description": "CA для проверки клиентских сертификатов (mTLS)." },
+"require_client_cert": { "type": "boolean", "description": "Требовать клиентский сертификат на входе." },
+"alpn_protocols": {
+"type": "array",
+"description": "Список ALPN (например: h2, http/1.1).",
+"items": { "type": "string" }
+},
+"ocsp_stapling": { "type": "boolean" },
+"min_version": {
+"type": "string",
+"enum": ["TLS1_2", "TLS1_3"]
+}
+}
+},
+"proxy": {
+"description": "Глобальные настройки проксирования к апстриму.",
+"type": "object",
+"additionalProperties": false,
+"properties": {
+"timeout": { "$ref": "#/$defs/duration" },
+"insecure_skip_verify": { "type": "boolean", "description": "Не проверять сертификат апстрима (TLS)." },
+"route_len_hint": {
+"type": "integer",
+"minimum": 0,
+"description": "Подсказка длины строки маршрута для предварительного выделения буферов."
+},
+"status_bad_gateway": { "$ref": "#/$defs/httpStatusCode" },
+"status_gateway_timeout": { "$ref": "#/$defs/httpStatusCode" },
+"balance": {
+"type": "string",
+"enum": ["round_robin", "least_conn"],
+"description": "Алгоритм балансировки (если используется набор апстримов)."
+},
+"retries": {
+"type": "integer",
+"minimum": 0,
+"description": "Повторы для идемпотентных методов."
+},
+"retry_jitter": { "$ref": "#/$defs/duration" },
+"connect_timeout": { "$ref": "#/$defs/duration" },
+"read_timeout": { "$ref": "#/$defs/duration" },
+"write_timeout": { "$ref": "#/$defs/duration" },
+"x_forwarded": {
+"type": "boolean",
+"description": "Добавлять X-Forwarded-For/Proto/Host и Forwarded."
+},
+"rewrite_host": {
+"type": "string",
+"description": "Перезаписать заголовок Host (если задан)."
+}
+}
+},
+"static": {
+"description": "Глобальные настройки раздачи статики.",
+"type": "object",
+"additionalProperties": false,
+"properties": {
+"root": { "type": "string", "description": "Каталог статики (абс./относительный)." },
+"compress": { "type": "boolean" },
+"compress_brotli": { "type": "boolean" },
+"compress_zstd": { "type": "boolean" },
+"generate_index_pages": { "type": "boolean" },
+"index_names": {
+"type": "array",
+"items": { "type": "string" }
+},
+"cache_duration": { "$ref": "#/$defs/duration" },
+"allow_empty_root": { "type": "boolean" },
+"accept_byte_range": { "type": "boolean" },
+"skip_cache": { "type": "boolean" },
+"spa_fallback": {
+"type": "boolean",
+"description": "Включить history-fallback для SPA."
+}
+}
+},
+"plugins": {
+"description": "Глобальные плагины (фильтры). Применяются до/после действий, если не переопределены в группах.",
+"type": "array",
+"items": { "$ref": "#/$defs/plugin" }
+},
+"groups": {
+"description": "Группы маршрутов с локальными переопределениями настроек и плагинов.",
+"type": "array",
+"items": {
+"type": "object",
+"additionalProperties": false,
+"properties": {
+"name": { "type": "string", "description": "Имя группы (для читаемых метрик/логов)." },
+"routes": { "$ref": "#/$defs/routesMap" },
+"proxy": { "$ref": "#/properties/proxy" },
+"static": { "$ref": "#/properties/static" },
+"plugins": {
+"type": "array",
+"items": { "$ref": "#/$defs/plugin" }
+},
+"config": {
+"type": "object",
+"additionalProperties": false,
+"properties": {
+"routeLenHint": {
+"type": "integer",
+"minimum": 0,
+"description": "Локальная подсказка длины строки маршрута."
+}
+}
+}
+},
+"required": ["routes"]
+}
+},
+"routes": { "$ref": "#/$defs/routesMap" }
+},
+"required": ["routes"],
+"$defs": {
+"duration": {
+"type": "string",
+"description": "Длительность в человекочитаемом формате.",
+"pattern": "^[0-9]+(ns|us|µs|ms|s|m|h|d)$",
+"examples": ["5s", "250ms", "1h", "10m"]
+},
+"httpStatusCode": {
+"description": "Код HTTP-статуса.",
+"type": "integer",
+"minimum": 100,
+"maximum": 599
+},
+"plugin": {
+"type": "object",
+"description": "Определение плагина (фильтра).",
+"additionalProperties": false,
+"properties": {
+"name": {
+"type": "string",
+"description": "Имя плагина. Примеры: logger, rate-limiter, headers, cors, ip-allow-deny, auth."
+},
+"config": {
+"type": "object",
+"description": "Произвольная конфигурация плагина (валидируется самим плагином)."
+}
+},
+"required": ["name"]
+},
+"routesMap": {
+"type": "object",
+"description": "Отображение DSL-правил: "<HEAD>": "<ACTION>".",
+"propertyNames": {
+"description": "HEAD: опциональные методы (любой токен или *), затем путь, начинающийся с /. Маска * допускается только последним сегментом.",
+"type": "string",
+"pattern": "^(?:(?:\*|[A-Za-z0-9!#$%&'*+.^_`|~-]+)(?:[ \\t]+(?:\\*|[A-Za-z0-9!#$%&'*+.^_`|~-]+))*[ \t]+)?/(?:(?:[^/\s]+|:[A-Za-z][A-Za-z0-9_-]*)(?:/(?:[^/\s]+|:[A-Za-z][A-Za-z0-9_-]*))*)(?:/\*)?$"
+},
+"additionalProperties": {
+"description": "ACTION: proxy URI | static DIR | fixed STATUS [тело] | echo * | STATUS *.",
+"type": "string",
+"anyOf": [
+{ "pattern": "^https?://\S+$", "description": "proxy: абсолютный HTTP(S) URI" },
+{ "pattern": "^(?:/|\.)(?:[^\n]*)$", "description": "static: каталог (абс./относ.)" },
+{
+"pattern": "^(?:\d{3}|OK|CREATED|ACCEPTED|NO_CONTENT|MOVED|FOUND|SEE_OTHER|NOT_MODIFIED|TEMP_REDIRECT|PERM_REDIRECT|BAD_REQUEST|UNAUTHORIZED|FORBIDDEN|NOT_FOUND|METHOD_NOT_ALLOWED|CONFLICT|GONE|TOO_MANY_REQUESTS|INTERNAL_ERROR|NOT_IMPLEMENTED|BAD_GATEWAY|SERVICE_UNAVAILABLE|GATEWAY_TIMEOUT)(?:[ \t]+.+)?$",
+"description": "fixed: статус и опциональное тело (JSON или текст)"
+},
+{
+"pattern": "^\*$",
+"description": "echo без статуса"
+},
+{
+"pattern": "^(?:\d{3}|OK|CREATED|ACCEPTED|NO_CONTENT|MOVED|FOUND|SEE_OTHER|NOT_MODIFIED|TEMP_REDIRECT|PERM_REDIRECT|BAD_REQUEST|UNAUTHORIZED|FORBIDDEN|NOT_FOUND|METHOD_NOT_ALLOWED|CONFLICT|GONE|TOO_MANY_REQUESTS|INTERNAL_ERROR|NOT_IMPLEMENTED|BAD_GATEWAY|SERVICE_UNAVAILABLE|GATEWAY_TIMEOUT)[ \t]+\*$",
+"description": "echo со статусом"
+}
+]
+},
+"minProperties": 1
+}
+},
+"examples": [
+{
+"server": {
+"listen_addr": ":8080",
+"listen_network": "tcp",
+"name": "AnyGate",
+"concurrency": 512,
+"read_buffer_size": 4096,
+"write_buffer_size": 4096,
+"read_timeout": "5s",
+"write_timeout": "5s",
+"idle_timeout": "30s",
+"max_conns_per_ip": 50,
+"max_requests_per_conn": 100,
+"max_idle_worker_duration": "10s",
+"tcp_keepalive_period": "15s",
+"max_request_body_size": 1048576,
+"sleep_when_limit_exceeded": "1s",
+"disable_keepalive": false,
+"tcp_keepalive": true,
+"reduce_memory_usage": false,
+"get_only": false,
+"disable_multipart_form": true,
+"log_all_errors": true,
+"secure_error_log": true,
+"disable_header_normalizing": false,
+"no_default_server_header": false,
+"no_default_date": false,
+"no_default_content_type": false,
+"keep_hijacked_conns": false,
+"close_on_shutdown": true,
+"stream_request_body": true
+},
+"proxy": {
+"timeout": "10s",
+"insecure_skip_verify": true,
+"route_len_hint": 128,
+"status_bad_gateway": 502,
+"status_gateway_timeout": 504,
+"balance": "least_conn",
+"retries": 2,
+"retry_jitter": "100ms",
+"connect_timeout": "2s",
+"read_timeout": "10s",
+"write_timeout": "10s",
+"x_forwarded": true,
+"rewrite_host": "backend.local"
+},
+"static": {
+"root": "./public",
+"compress": true,
+"compress_brotli": true,
+"compress_zstd": false,
+"generate_index_pages": true,
+"index_names": ["index.html"],
+"cache_duration": "10m",
+"allow_empty_root": false,
+"accept_byte_range": true,
+"skip_cache": false,
+"spa_fallback": true
+},
+"plugins": [
+{ "name": "logger", "config": { "level": "info" } },
+{ "name": "rate-limiter", "config": { "requests_per_minute": 100 } }
+],
+"groups": [
+{
+"name": "v1",
+"routes": {
+"/v1/": "http://service-v1:9000"
+},
+"proxy": { "timeout": "5s" },
+"plugins": [
+{ "name": "auth", "config": { "header": "X-API-Key" } }
+],
+"config": { "routeLenHint": 256 }
+}
+],
+"routes": {
+"/": "/dist/",
+"/ping": "http://localhost:8081/ping",
+"GET POST PATCH /api/mock/rude": "FORBIDDEN {"msg":"GO PATCH UR MUM!"}",
+"GET /fastest/ever/ok": "OK",
+"/a/b/c": "*",
+"/a/b/c-forbidden": "FORBIDDEN *",
+"/files/*": "http://fs/",
+"/users/:id": "http://auth/users/"
+}
+}
+]
+}
